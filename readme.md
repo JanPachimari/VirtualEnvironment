@@ -1,5 +1,3 @@
-![Screenshot](benchmark.png)
-
 --------------------------
 This is the "Closed-loop simulator of complex behavior and learning based on reinforcement learning and deep neural networks" **(CoBeL-RL)**.
 
@@ -25,15 +23,11 @@ terminal: (you can change the path name to whatever you want)
  command from the CoBel-RL directory:
 >pip install -r requirements.txt --no-index
 
-Alternatively if you are working from the institute activate the provided virtual environment with 
-> source /groups/cns/venv/cobel_rl/venv/bin/activate
-
 * make sure that your 'PYTHONPATH' environment variable includes **'mySimulatorFolder/CoBel-RL'**.
+* alternatively change the current directory before importing framework module with os.chdir
 * set a 'BLENDER_EXECUTABLE_PATH' environment variable that points to the path containing the 'Blender' executable,  
 e.g., **'/opt/blender2.79b/'**  
-
+* alternatively specifiy the blender path as a parameter when initializing the world module
 * go to **.../mySimulatorFolder/CoBel-RL/demo/simpleGridGraphDemo/**
 * start the demo project: **python3 simpleGridGraphDemo.py**
-
-
-Preliminary information, needs further checking: It seems there are some issues with 'tensorflow', version 1.5.0 and the employed 'python' version. If you experience such compatibility problems and have a 'python' version >=3.7, it might help to downgrade 'python' to a version >=2.7 and <=3.6. However, this is just a preliminary hint, the issue will have to be further explored.
+* start the control demo: **python3 control_demo.py**
