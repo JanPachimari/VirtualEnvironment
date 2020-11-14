@@ -468,7 +468,7 @@ class FrontendBlenderInterface():
         This function sets the rotation of a given barrier
         | **Args**
         | barrier_id:   The id of the barrier to be rotated
-        | rotation:     The rotation in degrees (0-360)
+        | rotation:     The rotation in radians
         '''
 
         contentStr = '%s,%f' % (barrier_id, rotation)
@@ -476,3 +476,24 @@ class FrontendBlenderInterface():
         self.controlSocket.send(sendStr.encode('utf-8'))
         # Waiting for acknowledgement from Blender
         self.controlSocket.recv(50)
+
+    def set_texture(self, barrier_id, texture):
+        pass
+
+    def set_barrier(self, barrier_id, renderState, rotation, texture):
+        pass
+
+    def get_barrierInfo(self, barrier_id):
+        pass
+
+    def get_barrierIDs(self):
+        '''
+        Returns a list of the id's of all barriers in the environment
+        '''
+
+        sendStr = 'get_barrierIDs'
+        self.controlSocket.send(sendStr.encode('utf-8'))
+        # Waiting for answer
+        # Note: Which port should be used?
+        response = self.controlSocket.recv(3000).decode('utf-8')
+        return response
