@@ -451,7 +451,8 @@ class FrontendBlenderInterface():
 
     def set_renderState(self, barrier_id, renderState):
         '''
-        This function sets the render state of a given barrier on the topology graph to true/false
+        This function sets the render state of a given barrier on the topology graph to true/false.
+        The main loop will also take care of adjusting the topology graph accordingly.
         | **Args**
         | barrier_id:   The id of the barrier to be set
         | renderState:  True/False
@@ -468,32 +469,59 @@ class FrontendBlenderInterface():
         This function sets the rotation of a given barrier
         | **Args**
         | barrier_id:   The id of the barrier to be rotated
-        | rotation:     The rotation in radians
+        | rotation:     The rotation in degrees (0-360)
         '''
 
-        contentStr = '%s,%f' % (barrier_id, rotation)
+        contentStr = '%s,%f' % (barrier_id, np.radians(rotation))
         sendStr = 'set_rotation,%s' % contentStr
         self.controlSocket.send(sendStr.encode('utf-8'))
         # Waiting for acknowledgement from Blender
         self.controlSocket.recv(50)
 
     def set_texture(self, barrier_id, texture):
-        pass
+        '''
+        This function sets the texture of the barrier
+        | **Args**
+        | barrier_id:   The id of the barrier to be given a texture
+        | texture:      Filepath to the chosen texture
+        '''
 
-    def set_barrier(self, barrier_id, renderState, rotation, texture):
-        pass
+        # PATRICK Shameless copy-paste from previous functions
+        contentStr = '%s,%s' % (barrier_id, texture)
+        sendStr = 'set_texture,%s' % contentStr
+        self.controlSocket.send(sendStr.encode('utf-8'))
+        # Waiting for acknowledgement from Blender
+        self.controlSocket.recv(50)
+
+    def set_barrier(self, barrier_id, render_state, rotation, texture):
+        '''
+        This function calls all the barrier defining functions for the given barrier
+        | **Args**
+        | barrier_id:   The id of the barrier to be set
+        | render_state: Boolean for setting wether the given barrier should be rendered
+        | rotation:     The rotation in degrees
+        | texture:      Filepath to the chosen texture
+        '''
+
+        self.set_renderState(barrier_id, render_state)
+        self.set_rotation(barrier_id, rotation)
+        self.set_texture(barrier_id, texture)
 
     def get_barrierInfo(self, barrier_id):
         pass
 
     def get_barrierIDs(self):
         '''
-        Returns a list of the id's of all barriers in the environment
+        This function returns a list of all barrier objects.
+        BarrierIDs are in the from "barrierxxx-yyy", where xxx and yyy are the
+        numbers of the nodes the barrier is standing between.
+        This may be subject to change.
         '''
 
         sendStr = 'get_barrierIDs'
         self.controlSocket.send(sendStr.encode('utf-8'))
-        # Waiting for answer
-        # Note: Which port should be used?
-        response = self.controlSocket.recv(3000).decode('utf-8')
-        return response
+        barrierStr = self.controlSocket.recv(1000).decode('utf-8')
+
+        barrierIDs = barrierStr.split(',')
+
+        return barrierIDs
