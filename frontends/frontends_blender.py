@@ -4,6 +4,7 @@ import socket
 import os
 import subprocess
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 # shapely
 from shapely.geometry import Polygon
 
@@ -165,7 +166,7 @@ class FrontendBlenderInterface():
         # retrieve individual noes
         for n in range(nrOfNodes):
             nodeStr = self.controlSocket.recv(1000).decode('utf-8')
-            #print('reading manually defined node: %s' % nodeStr)
+            # print('reading manually defined node: %s' % nodeStr)
             nameStr, xStr, yStr, typeStr = nodeStr.split(',')
             nodeName = nameStr
             nodeX = float(xStr)
@@ -194,7 +195,7 @@ class FrontendBlenderInterface():
         # retrieve individual edges
         for n in range(nrOfEdges):
             edgeStr = self.controlSocket.recv(1000).decode('utf-8')
-            #print('reading manually defined edge: %s' % edgeStr)
+            # print('reading manually defined edge: %s' % edgeStr)
             nameStr, firstStr, secondStr = edgeStr.split(',')
             edgeName = nameStr
             first = int(firstStr)
@@ -472,7 +473,7 @@ class FrontendBlenderInterface():
         | rotation:     The rotation in degrees (0-360)
         '''
 
-        contentStr = '%s,%f' % (barrier_id, np.radians(rotation))
+        contentStr = '%s,%f' % (barrier_id, rotation)
         sendStr = 'set_rotation,%s' % contentStr
         self.controlSocket.send(sendStr.encode('utf-8'))
         # Waiting for acknowledgement from Blender
@@ -483,10 +484,9 @@ class FrontendBlenderInterface():
         This function sets the texture of the barrier
         | **Args**
         | barrier_id:   The id of the barrier to be given a texture
-        | texture:      Filepath to the chosen texture
+        | texture:      Filepath to the chosen texture, relative to the folder containing the blender executable
         '''
 
-        # PATRICK Shameless copy-paste from previous functions
         contentStr = '%s,%s' % (barrier_id, texture)
         sendStr = 'set_texture,%s' % contentStr
         self.controlSocket.send(sendStr.encode('utf-8'))
@@ -503,12 +503,41 @@ class FrontendBlenderInterface():
         | texture:      Filepath to the chosen texture
         '''
 
+        print('Setting barrier with barrierID', barrier_id, '.')
         self.set_renderState(barrier_id, render_state)
         self.set_rotation(barrier_id, rotation)
         self.set_texture(barrier_id, texture)
 
     def get_barrierInfo(self, barrier_id):
-        pass
+        '''
+        This function returns a dictionary containing renderState, rotation and texture of a given barrier
+        | **Args**
+        | barrier_id:   The id of the barrier to be set
+        '''
+
+        # Sending command
+        sendStr = 'get_barrierInfo,%s' % barrier_id
+        self.controlSocket.send(sendStr.encode('utf-8'))
+        # Receiving data
+        responseStr = self.controlSocket.recv(3000).decode('utf-8')
+        responseList = responseStr.split(',')
+
+        # Decoding string to rotation matrix
+        rotationList = responseList[1]
+        rotationArray = rotationList.split('|')
+        rotationMatrix = [i.split(';') for i in rotationArray]
+        # Converting rotation matrix to Euler angles
+        r = R.from_matrix(rotationMatrix)
+        rotation = r.as_euler('xyz', degrees=True)
+
+        # Saving results in dictionary
+        barrierInfo = {
+            'renderState': responseList[0],
+            'rotation': rotation[2],
+            'texture': responseList[2]
+        }
+
+        return barrierInfo
 
     def get_barrierIDs(self):
         '''
@@ -516,6 +545,8 @@ class FrontendBlenderInterface():
         BarrierIDs are in the from "barrierxxx-yyy", where xxx and yyy are the
         numbers of the nodes the barrier is standing between.
         This may be subject to change.
+        | **Args**
+        | barrier_id:   The id of the barrier to be set
         '''
 
         sendStr = 'get_barrierIDs'
@@ -525,3 +556,18 @@ class FrontendBlenderInterface():
         barrierIDs = barrierStr.split(',')
 
         return barrierIDs
+
+    def set_spotlight(self, spotlight_id, renderState):
+        '''
+        This function sets the render state of a given spotlight object.
+        A spotlight lights up the area around a topology graph node.
+        | **Args**
+        | spotlight_id: The id of the spotlight to be toggled
+        | renderState:  True/False
+        '''
+
+        contentStr = '%s,%r' % (spotlight_id, renderState)
+        sendStr = 'set_spotlight,%s' % contentStr
+        self.controlSocket.send(sendStr.encode('utf-8'))
+        # Waiting for acknowledgement from Blender
+        self.controlSocket.recv(50)
