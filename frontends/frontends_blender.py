@@ -484,16 +484,9 @@ class FrontendBlenderInterface():
         This function sets the texture of the barrier
         | **Args**
         | barrier_id:   The id of the barrier to be given a texture
-<<<<<<< HEAD
         | texture:      Filepath to the chosen texture, relative to the folder containing the blender executable
         '''
 
-=======
-        | texture:      The chosen texture
-        '''
-
-        #PATRICK Shameless copy-paste from previous functions
->>>>>>> a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
         contentStr = '%s,%s' % (barrier_id, texture)
         sendStr = 'set_texture,%s' % contentStr
         self.controlSocket.send(sendStr.encode('utf-8'))
@@ -508,10 +501,11 @@ class FrontendBlenderInterface():
         | barrier_id:   The id of the barrier to be set
         | render_state: Boolean for setting wether the given barrier should be rendered
         | rotation:     The rotation in degrees
-        | texture:      Filepath to the chosen texture
+        | texture:      Filepath to the chosen texture, relative to the blender executable
         '''
 
-=======
+
+== == == =
         | barrier_id: The id of the barrier to be set
         | render_state: Boolean for setting wether the given barrier should be rendered
         | rotation: The rotation in degrees
@@ -523,7 +517,6 @@ class FrontendBlenderInterface():
         self.set_rotation(barrier_id, rotation)
         self.set_texture(barrier_id, texture)
 
-<<<<<<< HEAD
     def get_barrierInfo(self, barrier_id):
         '''
         This function returns a dictionary containing renderState, rotation and texture of a given barrier
@@ -555,19 +548,17 @@ class FrontendBlenderInterface():
 
         return barrierInfo
 
-=======
->>>>>>> a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
     def get_barrierIDs(self):
         '''
         This function returns a list of all barrier objects.
         BarrierIDs are in the from "barrierxxx-yyy", where xxx and yyy are the
         numbers of the nodes the barrier is standing between.
         This may be subject to change.
-<<<<<<< HEAD
+<< << << < HEAD
         | **Args**
         | barrier_id:   The id of the barrier to be set
-=======
->>>>>>> a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
+== == == =
+>>>>>> > a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
         '''
 
         sendStr = 'get_barrierIDs'
@@ -583,11 +574,11 @@ class FrontendBlenderInterface():
         This function sets the render state of a given spotlight object.
         A spotlight lights up the area around a topology graph node.
         | **Args**
-<<<<<<< HEAD
+<< << << < HEAD
         | spotlight_id: The id of the spotlight to be toggled
-=======
+== == == =
         | spotlight_id:   The id of the spotlight to be toggled
->>>>>>> a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
+>>>>>> > a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
         | renderState:  True/False
         '''
 
@@ -596,9 +587,3 @@ class FrontendBlenderInterface():
         self.controlSocket.send(sendStr.encode('utf-8'))
         # Waiting for acknowledgement from Blender
         self.controlSocket.recv(50)
-<<<<<<< HEAD
-=======
-        
-
-        
->>>>>>> a8cd99fb83b88bfad2eab6f29fe8458b46ed647f
