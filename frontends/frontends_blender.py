@@ -536,7 +536,6 @@ class FrontendBlenderInterface():
             'rotation': rotation[2],
             'texture': responseList[2]
         }
-
         return barrierInfo
 
     def get_barrierIDs(self):
@@ -554,7 +553,6 @@ class FrontendBlenderInterface():
         barrierStr = self.controlSocket.recv(1000).decode('utf-8')
 
         barrierIDs = barrierStr.split(',')
-
         return barrierIDs
 
     def set_spotlight(self, spotlight_id, renderState):
