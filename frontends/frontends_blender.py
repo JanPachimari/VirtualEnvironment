@@ -514,7 +514,6 @@ class FrontendBlenderInterface():
         | **Args**
         | barrier_id:   The id of the barrier whose information is to be retrieved
         '''
-
         # Sending command
         sendStr = 'get_barrierInfo,%s' % barrier_id
         self.controlSocket.send(sendStr.encode('utf-8'))
