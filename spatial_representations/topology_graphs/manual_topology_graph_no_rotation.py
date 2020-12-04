@@ -88,6 +88,77 @@ class ManualTopologyGraphNoRotation(SpatialRepresentation):
             self.nodes[nodeIndex].goalNode = True
         
         self.sample_state_space()
+
+    #PATRICK
+    def reload(self):
+        '''
+        This funtion reloads the topology graph based on the changes in the environment,
+        without the need to initialize a new object after each change.
+        '''
+        # the world module is required here
+        world_module = self.modules['world']
+        # get the limits of the given environment
+        self.world_limits = world_module.getLimits()
+        # retrieve all boundary information from the environment
+        self.world_nodes, self.world_edges = world_module.getWallGraph()
+        # inherent definitions for the topology graph
+        # this is the node corresponding to the robot's actual position
+        self.currentNode = -1
+        # this is the node corresponding to the robot's next position
+        self.nextNode = -1
+        # this list of topologyNode[s] stores all nodes of the graph
+        self.nodes = []
+        # this list of [int,int]-entries defines all edges (unique) which make up the graph's connectivity
+        self.edges = []
+        self.cliqueSize = self.graph_info['cliqueSize']
+        # set up a manually constructed topology graph
+        # read topology structure from world module
+        nodes = np.array(world_module.getManuallyDefinedTopologyNodes())
+        nodes = nodes[nodes[:, 0].argsort()]
+        edges = np.array(world_module.getManuallyDefinedTopologyEdges())
+        edges = edges[edges[:, 0].argsort()]
+        # transfer the node points into the self.nodes list
+        indexCounter = 0
+        for n in nodes:
+            # create the corresponding node, where i is the running index of the mesh_points/corresponding nodes
+            node = TopologyNode(indexCounter, float(n[1]), float(n[2]))
+            self.nodes = self.nodes + [node]
+            indexCounter += 1
+        # fill in the self.edges list from the edges information
+        for e in edges:
+            self.edges = self.edges + [[int(e[1]), int(e[2])]]
+        # define a dedicated 'noneNode' that acts as a placeholder for neighborhood construction
+        noneNode = TopologyNode(-1, 0.0, 0.0)
+        # comstruct the neighborhoods of each node in the graph
+        for edge in self.edges:
+            # first edge node
+            a = self.nodes[int(edge[0])]
+            # second edge node
+            b = self.nodes[int(edge[1])]
+            # add node a to the neighborhood of node b, and vice versa
+            a.neighbors = a.neighbors + [b]
+            b.neighbors = b.neighbors + [a]
+        # it is possible that a node does not have the maximum possible number of neighbors, to stay consistent in RL, fill up the neighborhood
+        # with noneNode[s]:
+        for node in self.nodes:
+            while len(node.neighbors) < self.cliqueSize:
+                node.neighbors = node.neighbors + [noneNode]
+        # assign start nodes
+        for nodeIndex in self.graph_info['startNodes']:
+            self.nodes[nodeIndex].startNode = True
+            
+        # assign goal nodes
+        for nodeIndex in self.graph_info['goalNodes']:
+            self.nodes[nodeIndex].goalNode = True
+        
+        self.sample_state_space()
+
+        self.reloadVisualElements()
+    #PATRICK END
+
+
+
+
         
     def set_visual_debugging(self, visual_output, gui_parent):
         '''
@@ -147,7 +218,59 @@ class ManualTopologyGraphNoRotation(SpatialRepresentation):
             self.plot.addItem(self.posMarker)
             # initial position to center, this has to be worked over later!
             self.posMarker.setData(0.0, 0.0, 0.0)
-              
+
+
+    #PATRICK
+    def reloadVisualElements(self):
+        '''
+        This function reloads the visual elements. It is called after the topology graph has been changed.
+        '''
+        if self.visual_output:
+
+            #self.plot = plot
+            self.plot.clear()
+            # set extension of the plot, lock aspect ratio
+            self.plot.setXRange(self.world_limits[0, 0], self.world_limits[0, 1])
+            self.plot.setYRange(self.world_limits[1, 0], self.world_limits[1, 1])
+            self.plot.setAspectLocked()
+            # set up indicator arrows for each node, except the goal node, and all nodes in active shock zones iff shock zones exist
+            for node in self.nodes:
+                if not node.goalNode:
+                    node.qIndicator = CogArrow(angle=0.0, headLen=20.0, tipAngle=25.0, tailLen=0.0, brush=(255, 255, 0))
+                    self.plot.addItem(node.qIndicator)
+            # overlay the world's perimeter
+            self.perimeterGraph = qg.GraphItem()
+            self.plot.addItem(self.perimeterGraph)
+            self.perimeterGraph.setData(pos=np.array(self.world_nodes), adj=np.array(self.world_edges), brush=(128, 128, 128))
+            # overlay the topology graph
+            self.topologyGraph = qg.GraphItem()
+            self.plot.addItem(self.topologyGraph)
+            # set up a brushes array for visualization of the nodes
+            # normal nodes are grey
+            symbolBrushes = [qg.mkBrush(color=(128, 128, 128))] * len(self.nodes)
+            # set colors of normal and goal nodes
+            for node in self.nodes:
+                # start nodes are green
+                if node.startNode:
+                    symbolBrushes[node.index] = qg.mkBrush(color=(0, 255, 0))
+                # goal node is red
+                if node.goalNode:
+                    symbolBrushes[node.index] = qg.mkBrush(color=(255, 0, 0))
+            # construct appropriate arrays from the self.nodes and the self.edges information
+            tempNodes, tempEdges =[], []
+            for node in self.nodes:
+                tempNodes = tempNodes + [[node.x, node.y]]
+            for edge in self.edges:
+                tempEdges = tempEdges + [[edge[0], edge[1]]]
+            self.topologyGraph.setData(pos=np.array(tempNodes), adj=np.array(tempEdges), symbolBrush=symbolBrushes)
+            # eventually, overlay robot marker
+            self.posMarker = CogArrow(angle=0.0, headLen=20.0, tipAngle=25.0, tailLen=0.0, brush=(255, 0, 0))
+            self.plot.addItem(self.posMarker)
+            # initial position to center, this has to be worked over later!
+            self.posMarker.setData(0.0, 0.0, 0.0)
+    #PATRICK END
+
+            
     def updateVisualElements(self):
         '''
         This function updates the visual elements.
@@ -268,3 +391,36 @@ class ManualTopologyGraphNoRotation(SpatialRepresentation):
         This function returns the clique size.
         '''
         return gym.spaces.Discrete(self.cliqueSize)
+
+#PATRICK
+    def isTraversable(self):
+
+        traversedList = np.zeros(len(self.nodes))
+        toTraverse = []
+        
+        for node in self.nodes:
+            if node.startNode == True:
+                startNode = node
+            elif node.goalNode == True:
+                endNode = node
+
+        toTraverse = toTraverse + [startNode]
+        traversedList[startNode.index] = 1
+
+        while len(toTraverse) > 0:
+            currentNode = toTraverse.pop(0)
+            
+            if currentNode.goalNode == True:
+                return True
+            
+            for node in currentNode.neighbors:
+                if node.index != -1:
+                    if traversedList[node.index] == 0:
+                        toTraverse = toTraverse + [node]
+                        traversedList[node.index] = 1
+
+        return False
+
+        
+        
+            
