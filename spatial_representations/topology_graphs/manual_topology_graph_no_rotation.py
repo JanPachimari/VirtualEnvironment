@@ -391,3 +391,36 @@ class ManualTopologyGraphNoRotation(SpatialRepresentation):
         This function returns the clique size.
         '''
         return gym.spaces.Discrete(self.cliqueSize)
+
+#PATRICK
+    def isTraversable(self):
+
+        traversedList = np.zeros(len(self.nodes))
+        toTraverse = []
+        
+        for node in self.nodes:
+            if node.startNode == True:
+                startNode = node
+            elif node.goalNode == True:
+                endNode = node
+
+        toTraverse = toTraverse + [startNode]
+        traversedList[startNode.index] = 1
+
+        while len(toTraverse) > 0:
+            currentNode = toTraverse.pop(0)
+            
+            if currentNode.goalNode == True:
+                return True
+            
+            for node in currentNode.neighbors:
+                if node.index != -1:
+                    if traversedList[node.index] == 0:
+                        toTraverse = toTraverse + [node]
+                        traversedList[node.index] = 1
+
+        return False
+
+        
+        
+            
