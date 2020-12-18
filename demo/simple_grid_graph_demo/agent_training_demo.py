@@ -5,6 +5,7 @@ import os
 import numpy as np
 import pyqtgraph as qg
 import random
+import time
 # tensorflow/keras
 from tensorflow.keras import backend
 # change working dictionary
@@ -49,7 +50,9 @@ def trialBeginCallback(trial, rlAgent):
     | rlAgent:                      The employed reinforcement learning agent.
 
     '''
+    rlAgent.interfaceOAI.setTimeAtStart()
     print("Beginning trial", trial)
+    
     if trial == rlAgent.trialNumber - 1:
         # end the experiment by setting the number of steps to a excessively large value, this stops the 'fit' routine
         rlAgent.agent.step = rlAgent.maxSteps + 1
@@ -65,38 +68,18 @@ def trialEndCallback(trial,rlAgent,logs):
     | logs:                         Output of the reinforcement learning subsystem.
 
     '''
-    print("Ending trial", trial)
-    #PATRICK This randomizes the barrier layout in the blender environment, then calls for the reload method to update the graph itself.
-
-    barrierProbability = 33
+    #This takes the difference between the time at the start and at the end of the trial to calculate ho mucht time it took the agent to complete a trial.
+    #This time should steadily go down as the training process continues and go up once there is a change in the environment.
+    rlAgent.interfaceOAI.setTimeAtEnd()
+    elapsedTime = rlAgent.interfaceOAI.timeToComplete()
+    print("Ending trial", trial, "in about", elapsedTime, "seconds")
+    #PATRICK This sets 2 barriers after a set number of trials to see how the agent behaves after a change in the environment.
     
-    if trial % 10 == 0:
-        validityCheck = False
-        while validityCheck == False:
-            barrierIDs = rlAgent.interfaceOAI.modules['world'].get_barrierIDs()
-            for barrier in barrierIDs:
-                if random.randint(0, 99) < barrierProbability:
-                    rlAgent.interfaceOAI.modules['world'].set_barrier(barrier, 'True', 0, '//textures/wall_01.bmp')
-                else:
-                    rlAgent.interfaceOAI.modules['world'].set_barrier(barrier, 'False', 0, '//textures/wall_01.bmp')
+    if trial == 99:
+        rlAgent.interfaceOAI.modules['world'].set_barrier('barrier013-014', 'True', 0, '//textures/wall_01.bmp')
+        rlAgent.interfaceOAI.modules['world'].set_barrier('barrier007-011', 'True', 0, '//textures/wall_01.bmp')
 
-            rlAgent.interfaceOAI.modules['spatial_representation'].reload()
-
-            validityCheck = rlAgent.interfaceOAI.modules['spatial_representation'].isTraversable()
-
-        '''
-        #This was the first attempt at randomizing the graph. It works, but it can be done much better. I will leave this here if something breaks
-        mainWindow = rlAgent.interfaceOAI.modules['spatial_representation'].gui_parent
-        visual_output = rlAgent.interfaceOAI.modules['spatial_representation'].visual_output
-        plot = rlAgent.interfaceOAI.modules['spatial_representation'].plot
-
-
-        rlAgent.interfaceOAI.modules['spatial_representation']=ManualTopologyGraphNoRotation(rlAgent.interfaceOAI.modules,{'startNodes':[0],'goalNodes':[15],'cliqueSize':4})
-        rlAgent.interfaceOAI.modules['spatial_representation'].gui_parent = mainWindow
-        rlAgent.interfaceOAI.modules['spatial_representation'].visual_output = visual_output
-        rlAgent.interfaceOAI.modules['spatial_representation'].rlAgent = rlAgent
-        rlAgent.interfaceOAI.modules['spatial_representation'].reloadVisualElements(plot)
-        '''
+        rlAgent.interfaceOAI.modules['spatial_representation'].reload()
         print("Changed configuration at trial", trial)
     #PATRICK END
 

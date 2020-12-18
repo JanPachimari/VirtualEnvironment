@@ -394,7 +394,9 @@ class ManualTopologyGraphNoRotation(SpatialRepresentation):
 
 #PATRICK
     def isTraversable(self):
-
+        '''
+        This function checks if the graph is traversable from start to goal.
+        '''
         traversedList = np.zeros(len(self.nodes))
         toTraverse = []
         
@@ -420,7 +422,7 @@ class ManualTopologyGraphNoRotation(SpatialRepresentation):
                         traversedList[node.index] = 1
 
         return False
-
+#PATRICK END
         
         
             
