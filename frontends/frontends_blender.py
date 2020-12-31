@@ -484,7 +484,7 @@ class FrontendBlenderInterface():
         This function sets the texture of the barrier
         | **Args**
         | barrier_id:   The id of the barrier to be given a texture
-        | texture:      Filepath to the chosen texture, relative to the folder containing the blender executable
+        | texture:      Filepath to the chosen texture, relative to the folder containing the environment file (.blend).
         '''
 
         contentStr = '%s,%s' % (barrier_id, texture)
