@@ -1,5 +1,6 @@
 # Open AI Gym
 import gym
+import time
 
 
 class OAIGymInterface(gym.Env):
@@ -14,6 +15,10 @@ class OAIGymInterface(gym.Env):
     '''
     
     def __init__(self, modules, withGUI=True, rewardCallback=None):
+        #PATRICK These are the variables for time at beginning and end of the trial
+        self.timeAtStart = 0.0
+        self.timeAtEnd = 0.0
+        #PATRICK END
         # store the modules
         self.modules = modules    
         # store visual output variable
@@ -66,3 +71,25 @@ class OAIGymInterface(gym.Env):
         self.modules['spatial_representation'].generate_behavior_from_action('reset')
         
         return self.modules['observation'].observation
+    
+    #PATRICK
+    def setTimeAtStart(self):
+        '''
+        This function sets the time at the start of the trial.
+        '''
+        self.timeAtStart = time.time()
+
+    def setTimeAtEnd(self):
+        '''
+        This function sets the time at the end of the trial.
+        '''
+        self.timeAtEnd = time.time()
+        
+    def timeToComplete(self):
+        '''
+        This function calculates the time needed to complete a trial.
+        '''
+        elapsedTime = self.timeAtEnd - self.timeAtStart
+
+        return elapsedTime
+    #PATRICK END
