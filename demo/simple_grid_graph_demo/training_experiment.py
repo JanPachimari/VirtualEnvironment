@@ -101,8 +101,8 @@ def trialEndCallback(trial, rlAgent, logs):
         )
         rlAgent.performanceMonitor.update(trial, logs)
 
-        # Add reward to result
-        rlAgent.interfaceOAI.modules['results'][trial] = logs['episode_reward']
+    # Add reward to result
+    rlAgent.interfaceOAI.modules['results'][trial] = logs['episode_reward']
 
 
 def singleRun():
@@ -161,9 +161,9 @@ def singleRun():
 
 if __name__ == "__main__":
     # Conduct an appropriate ammount of experiments (Calls to singleRun) and calculate the mean of the results
-    result = np.zeros((5, numTrials * numSessions))
+    result = np.zeros((25, numTrials * numSessions))
 
-    for i in range(5):
+    for i in range(25):
         result[i] = singleRun()
 
     finalResult = [np.mean(result[:, i]) for i in range(numTrials*numSessions)]
