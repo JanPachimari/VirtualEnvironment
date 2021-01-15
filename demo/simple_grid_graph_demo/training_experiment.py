@@ -29,7 +29,7 @@ visualOutput = True
 # Number of different barrier configurations
 numSessions = 3
 # Number of trials per session
-numTrials = 100
+numTrials = 300
 # Memory capacity of the DQN agent
 memoryCapacity = 5000
 
@@ -161,12 +161,23 @@ def singleRun():
 
 if __name__ == "__main__":
     # Conduct an appropriate ammount of experiments (Calls to singleRun) and calculate the mean of the results
-    result = np.zeros((25, numTrials * numSessions))
+    result = np.zeros((5, numTrials * numSessions))
 
-    for i in range(25):
+    for i in range(5):
         result[i] = singleRun()
 
-    finalResult = [np.mean(result[:, i]) for i in range(numTrials*numSessions)]
+    # Calculating mean over all experiments
+    finalResult = np.array([np.mean(result[:, i])
+                            for i in range(numTrials * numSessions)])
+    # Plotting result
     qg.plot(np.arange(numTrials * numSessions), finalResult, pen='r')
 
+    # Saving Reult to file
+    filepath = "results/%d-%d-%d.txt" % (numSessions,
+                                         numTrials, memoryCapacity)
+    resultFile = open(filepath, "w")
+    resultFile.write(np.array2string(finalResult))
+
     input("Press enter to continue")
+
+    resultFile.close()
