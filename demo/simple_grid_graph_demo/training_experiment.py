@@ -12,13 +12,14 @@ from agents.dqn_agents import DQNAgentBaseline
 from spatial_representations.topology_graphs.manual_topology_graph_no_rotation import ManualTopologyGraphNoRotation
 from frontends.frontends_blender import FrontendBlenderInterface
 import os
+import time
 import numpy as np
 import pyqtgraph as qg
 import random
 # tensorflow/keras
 from tensorflow.keras import backend
 # change working dictionary
-os.chdir("C:/Users/yoric/Desktop/virtual-environment-interface")
+os.chdir("")
 # import framework modules
 
 # shall the system provide visual output while performing the experiments?
@@ -29,7 +30,7 @@ visualOutput = True
 # Number of different barrier configurations
 numSessions = 3
 # Number of trials per session
-numTrials = 300
+numTrials = 100
 # Memory capacity of the DQN agent
 memoryCapacity = 5000
 
@@ -122,7 +123,7 @@ def singleRun():
     # a dictionary that contains all employed modules
     modules = dict()
     modules['world'] = FrontendBlenderInterface(
-        'simple_grid_graph_env/simple_grid_graph_maze.blend', 'C:/Users/yoric/blender-2.79b-windows64/blender')
+        'simple_grid_graph_env/simple_grid_graph_maze.blend', 'BLENDER_PATH_HERE')
     modules['observation'] = ImageObservationBaseline(
         modules['world'], mainWindow, visualOutput)
     modules['spatial_representation'] = ManualTopologyGraphNoRotation(
@@ -161,10 +162,14 @@ def singleRun():
 
 if __name__ == "__main__":
     # Conduct an appropriate ammount of experiments (Calls to singleRun) and calculate the mean of the results
-    result = np.zeros((5, numTrials * numSessions))
+    noOfExperiments = 2
+    
+    result = np.zeros((noOfExperiments, numTrials * numSessions))
 
-    for i in range(5):
+    for i in range(noOfExperiments):
+        print("Preparing to run Single Run number", i)
         result[i] = singleRun()
+        time.sleep(3)
 
     # Calculating mean over all experiments
     finalResult = np.array([np.mean(result[:, i])
@@ -173,11 +178,23 @@ if __name__ == "__main__":
     qg.plot(np.arange(numTrials * numSessions), finalResult, pen='r')
 
     # Saving Reult to file
+
+    fileName = str(numTrials * numSessions) + "-" + str(memoryCapacity) + "-" + time.ctime()
+    fileName = fileName.replace(":", "_")
+
+    print(fileName)
+
+    filePath = "results/" + fileName + ".npy"
+
+    #This is a method to save finelResult in a txt file, uncomment if preferred
+    '''
     filepath = "results/%d-%d-%d.txt" % (numSessions,
                                          numTrials, memoryCapacity)
     resultFile = open(filepath, "w")
     resultFile.write(np.array2string(finalResult))
+    '''
+    np.save(filePath, result)
 
     input("Press enter to continue")
 
-    resultFile.close()
+    #resultFile.close()
